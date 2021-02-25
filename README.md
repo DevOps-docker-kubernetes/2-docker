@@ -8,11 +8,7 @@
   5. [Docker Hub](#docker-hub)
   6. [Docker compose](#docker-compose)
   7. [Crear imagen personalizada](#create-image)
-
-
- 
-
-
+  8. [Subir una imaben personalizada a docker-hub](#upload-image)
 
 <hr>
 
@@ -274,4 +270,25 @@ docker build -t billingapp:prod --no-cache --build-arg JAR_FILE="target/*.jar" .
 Ahora podemos levantar un contenedor de esta imagen usando el comando: 
 ~~~
 docker run -p 80:80 -p 8080:8080 --name billingapp billingapp:prod
+~~~
+
+<hr>
+
+<a name="upload-image"></a>
+
+## 8. Subir una imagen personalizada a docker-hub
+
+- En la consola de docker-hub creamos un nuevo repositorio.
+
+- En la terminal creamos una nueva imagen que apunte al repositorio remoto mediante el comando:
+~~~
+docker tag billingapp:prod abelalonso/billingapp:0.0.1
+~~~
+- Nos logueamos en docker-hub mediante el comando:
+~~~
+docker login
+~~~
+- Hacemos push de la imagen
+~~~
+  docker push abelalonso/billingapp:0.0.1
 ~~~
