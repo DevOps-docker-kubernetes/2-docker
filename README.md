@@ -7,6 +7,9 @@
   4. [Comandos de supervivencia](#docker-commands)
   5. [Docker Hub](#docker-hub)
   6. [Docker compose](#docker-compose)
+  7. [Crear imagen personalizada](#create-image)
+
+
  
 
 
@@ -214,4 +217,61 @@ Ahora en en navegador podemos navegar a ```localhost:9090``` para acceder a la i
 Para bajar los servicios que están levantados, podemos hacerlo uno a uno o bien a través del archivo de configuración mediante el comando:
 ~~~
 docker-compose down
+~~~
+
+<hr>
+
+<a name="create-image"></a>
+
+## 7. Crear una imagen personalizada con múltiples servicios
+
+Descargamos el zip que contendrá la app angular y el microservicio en java que utilizamos anteriormente y lo guardamos en la carpeta billingApp:
+- En el directorio **dist** está la aplicación angular del frontal.
+- En **target** tenemos el jar del microservicio que vamos a utilizar.
+- El archivo **appshell.sh** es un script que levanta y el microservicio java y el servidor web.
+- **nginx.conf** es la configuración por defecto del servidor web.
+
+Creamos el *Dockerfile*:
+
+- **FROM** indica la imagen de la que partimos
+- **RUN** ejecuta comandos como si se invocaran desde la consola. Podemos separar un comando en varias líneas para que sea más legible usando **\\** al final de cada linea y **;** al final del comando.
+
+~~~docker
+FROM nginx:alpine
+
+# Install java 8
+RUN apk -U add openjdk8 \
+    && rm -rf /var/cache/apk/*;
+RUN apk add ttf-dejavu
+
+# Install java microservice
+ENV JAVA_OPTS=""
+ARG JAR_FILE
+ADD ${JAR_FILE} app.jar
+
+# Install app on nginx serve
+# Use a volume is more efficient and speed than filesystem
+VOLUME /tmp
+RUN rm -rf /usr/share/nginx/html/*
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY dist/billingApp /usr/share/nginx/html
+COPY appshell.sh appshell.sh
+
+# Expose port 8080 for java swagger and port 80 for ngingx app
+EXPOSE 80 8080
+ENTRYPOINT ["sh", "/appshell.sh"]
+~~~
+
+Para construir la imagen utilizamos el comando:
+
+~~~
+docker build -t billingapp:prod --no-cache --build-arg JAR_FILE="target/*.jar" .
+~~~
+
+- **-t** indica el nombre y la etiqueta que tendrá la imagen
+- --**build-arg** establece el parámetro que hemos indicado en el Dockerfile.
+
+Ahora podemos levantar un contenedor de esta imagen usando el comando: 
+~~~
+docker run -p 80:80 -p 8080:8080 --name billingapp billingapp:prod
 ~~~
