@@ -2,9 +2,11 @@
 # 
 
   1. [Caso de estudio](#case)
-  2. [Comandos usados](#comand)
+  2. [Comandos iniciales](#comand)
   3. [Imagen de docker para la aplicación de facturación](#imagen)
   4. [Comandos de supervivencia](#docker-commands)
+  5. [Docker Hub](#docker-hub)
+  6. [Docker compose](#docker-compose)
  
 
 
@@ -132,3 +134,84 @@ Una vez levantado el contenedor, podemos acceder al frontal de la imagen en `loc
 
 - **Elminar un contenedor**
 ```docker rm <contenedor>```
+
+
+<hr>
+
+<a name="docker-hub"></a>
+
+## 5. Docker hub
+Es un repositorio de imagénes de docker, [Docker Hub](https://hub.docker.com/)
+
+Las distintas plataformas publican sus imágenes oficiales de sus servicios para poder utilizarlas en nuestros proyectos.
+
+
+<hr>
+
+<a name="docker-compose"></a>
+
+## 6. Docker compose: orquestar un servicio con dos imágenes
+Docker-compose  permite simplificar el uso de Docker para crear contendores, conectarlos, habilitar puertos, volumenes, etc... a partir de archivos YAML.
+
+Con Compose podemos crear diferentes contenedores y al mismo tiempo, en cada contenedor, diferentes servicios, unirlos a un volúmen común, iniciarlos y apagarlos, etc. Es un componente fundamental para poder construir aplicaciones y microservicios.
+
+- Vamos a utilizar una imagen de Postgres. En docker-hub, en la información de la imagen oficial vemos que podemos descargarla con el comando...
+~~~
+docker pull postgres
+~~~
+- Para levantar el contenedor de forma local podemos utilizar el comando...
+~~~
+docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres 
+~~~
+
+- O bien utilizar un archivo de configuración que le pasaremos a docker-compose:
+
+~~~yaml
+version: '3.1'
+
+services:
+
+  db:
+  container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: querty
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 9090:8080
+~~~
+
+Como norma general, el archivo que utilizaremos para guardar esta configuración sera docker-compose.yml. Si lo llamamos de otra forma (si tenemos varios archivos de configuración distintos), debemos especificarlo en la ejecución de docker-compose.
+
+Para descargar las imágenes utilizamos el comando
+~~~
+docker-compose pull
+~~~
+o bien el siguiente comando si nuestra configuración está en un archivo de configuración con un nombre distinto:
+~~~
+docker-compose -f <nombre> pull
+~~~
+
+Para levantar los servicios asociados usaremos el comando:
+~~~
+docker-compose up -d
+~~~
+-d permite levantar el contenedor en modo daemon.
+
+Ahora en en navegador podemos navegar a ```localhost:9090``` para acceder a la interfaz de adminer que conecta con el motor de base de datos de postgres.
+
+Para bajar los servicios que están levantados, podemos hacerlo uno a uno o bien a través del archivo de configuración mediante el comando:
+~~~
+docker-compose down
+~~~
